@@ -30,8 +30,8 @@ R = (E^2 + mu)*r^4 - 2*M*mu*r^3 + X*r^2 + 2*M*K*r -a^2*Q;
 O = Q + cos(theta)^2*(a^2*(E^2 + mu) - L^2/sin(theta)^2);
 
 % ODE from O Neill Chapter 4.2.2 Geodesics
-dx(1) = -sqrt(R / Sigma^4);
-dx(2) = sqrt(O / Sigma^4);
+dx(1) = -0*sqrt(R / Sigma^4);
+dx(2) = 0*sqrt(O / Sigma^4);
 dx(3) = ((L - a*sin(theta)^2*E) / sin(theta)^2 + a*((r^2 + a^2)*E - L*a)/(Delta) ) / Sigma^2;
 dx(4) = (a*(L - a*E*sin(theta)^2) + (r^2 + a^2)*((r^2 + a^2)*E - L*a)/(Delta)) / Sigma^2;
  
