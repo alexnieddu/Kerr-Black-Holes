@@ -1,3 +1,4 @@
+% Working simulation
 
 a = .84; M = 1;
 
