@@ -1,4 +1,5 @@
 % Tranformation to cartesian coordinates
+% Input is a whole array
 % Alexander Nieddu
 
 function x_ = cartesian(x, a)
