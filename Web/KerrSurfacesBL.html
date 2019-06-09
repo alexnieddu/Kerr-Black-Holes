@@ -1,0 +1,472 @@
+<!-- 
+Kerr Black Hole Visualisation
+Boyer Lindquist coordinates
+Alexander Nieddu
+ -->
+<html>
+
+  <head>
+
+  	<style>
+
+  		html, body { width:100%; height:100%; margin:0px; color:black; }
+
+  		h1, table, .topLeft, .bottomLeft, .topRight, .bottomRight { position: absolute;}
+
+  		h1 {text-align:center; width:100%;}
+  		.subTitle { font-size: .5em;}
+
+  		.topLeft {top:20px; left:10px;}
+
+  		.bottomLeft {bottom:20px; left:10px;}
+
+  		.topRight {top:20px; right:10px;}
+  		
+  		.bottomRight {bottom:20px; right:10px;}
+
+  	</style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.8.0/p5.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.8.0/addons/p5.dom.js"></script>
+
+    <script type="text/javascript" charset="UTF-8" src="https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/0.99.7/jsxgraphcore.js"></script>
+
+    <script type="text/x-mathjax-config">
+
+  MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+
+</script>
+
+<script type="text/javascript" async
+
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML">
+
+</script>
+
+<script>
+
+var r = 7.0;
+var theta = Math.PI/2;
+var phi = 0;
+var tau = 0;
+var p_r = 0;
+var p_theta = 1.9558;
+
+var anim = 0;
+var darkMode = false;
+var mesh = true;
+let scale = 150;
+var total = 50;
+let outerErgoColor, innerErgoColor, outerHorizonColor, innerHorizonColor, ringSingularityColor;
+
+var outerHorizon = new Array(total);
+
+// Loop to create 2D array using 1D array 
+for (var i = 0; i < total+1; i++) { 
+    outerHorizon[i] = new Array(total); 
+}
+
+var outerErgo = new Array(total);
+
+// Loop to create 2D array using 1D array 
+for (var i = 0; i < total+1; i++) { 
+    outerErgo[i] = new Array(total); 
+}
+
+var innerHorizon = new Array(total);
+
+// Loop to create 2D array using 1D array 
+for (var i = 0; i < total+1; i++) { 
+    innerHorizon[i] = new Array(total); 
+}
+
+
+var innerErgo = new Array(total);
+
+// Loop to create 2D array using 1D array 
+for (var i = 0; i < total+1; i++) { 
+    innerErgo[i] = new Array(total); 
+}
+
+
+var ringSingularity = new Array(total);
+
+// Loop to create 2D array using 1D array 
+for (var i = 0; i < total+1; i++) { 
+    ringSingularity[i] = new Array(total); 
+}
+
+let width = window.innerWidth, height = window.innerHeight;
+
+var M = 1;
+var a = .95;
+
+function setup() {
+
+	createCanvas(width, height, WEBGL);
+	colorMode(HSB);
+
+	outerErgoColor = color('hsba(116, 100%, 50%, 0.1)');
+	innerErgoColor = color('hsba(149, 100%, 50%, 0.3)');
+	outerHorizonColor = color('hsba(188, 100%, 50%, 0.2)');
+	innerHorizonColor = color('hsba(206, 100%, 50%, 0.2)');
+	ringSingularityColor = color('hsba(255, 100%, 50%, 1)');
+
+	document.getElementById("rotationSlider").max = M;
+	
+	//debugMode();
+}
+
+
+
+function draw() {
+	if(darkMode) {
+		background(0);
+		document.getElementsByTagName("body")[0].style.color = "white";
+	}
+	else {
+		background(255);
+		document.getElementsByTagName("body")[0].style.color = "black";
+	}
+	a = document.getElementById("rotationSlider").value;
+	scale = document.getElementById("resSlider").value;
+	rotateX(Math.PI/2);
+	if(anim) rotateZ( millis() / 500 );
+	drawTable();
+  	drawSurfaces();
+	orbitControl();
+}
+
+
+
+function cartesian(r, theta, phi) {
+	x = (Math.sqrt(r*r + a*a)) * Math.sin(theta) * Math.cos(phi);
+	y = (Math.sqrt(r*r + a*a)) * Math.sin(theta) * Math.sin(phi);
+	z = r * Math.cos(theta);
+
+	return [x, y, z];
+}
+
+function drawSurfaces() {
+	var checkedOErgo = document.getElementById("oErgo").checked;
+	var checkedOHor = document.getElementById("oHor").checked;
+	var checkedIHor = document.getElementById("iHor").checked;
+	var checkedIErgo = document.getElementById("iErgo").checked;
+	var checkedRingSingularity = document.getElementById("ringSingularity").checked;
+
+	if( checkedOErgo ) {
+		drawOuterErgo(scale);
+	}
+	if( checkedOHor ) {
+		drawOuterHorizons(scale);
+	}
+	if( checkedIHor ) {
+		drawInnerHorizons(scale);
+	}
+	if( checkedIErgo ) {
+		drawInnerErgo(scale);
+	}
+	// if( checkedRingSingularity ) {
+// 		drawRingSingularity(scale);
+// 	}
+}
+
+function drawOuterHorizons(scale) {
+	for (var i = 0; i < total+1; i++) {
+		var lat = map(i, 0, total, 0, Math.PI);
+		for (var j = 0; j < total+1; j++) {
+			var lon = map(j, 0, total, 0, Math.PI*2);
+			x = scale * (M + Math.sqrt(M*M - a*a)) * sin(lat) * cos(lon);
+      		y = scale * (M + Math.sqrt(M*M - a*a)) * sin(lat) * sin(lon);
+      		z = scale * (M + Math.sqrt(M*M - a*a)) * cos(lat);
+      		var vec = new p5.Vector(x, y, z);
+      		outerHorizon[i][j] = vec;
+		}
+	}
+
+	for (var i = 0; i < total; i++) {
+		var lat = map(i, 0, total, 0, Math.PI);
+		fill(outerHorizonColor);
+		if(mesh) {
+			stroke(outerHorizonColor);
+		}
+		else noStroke();
+		beginShape(TRIANGLE_STRIP);
+		for (var j = 0; j < total+1; j++) {
+			var v1 = outerHorizon[i][j];
+			vertex(v1.x, v1.y, v1.z);
+			var v2 = outerHorizon[i+1][j];
+			vertex(v2.x, v2.y, v2.z);
+		}
+		endShape();
+	}
+}
+
+function drawInnerHorizons(scale) {
+	for (var i = 0; i < total/2+1; i++) {
+		var lat = map(i, 0, total/2, 0, Math.PI);
+		for (var j = 0; j < total/2+1; j++) {
+			var lon = map(j, 0, total/2, 0, Math.PI*2);
+			x = scale * (M - Math.sqrt(M*M - a*a)) * sin(lat) * cos(lon);
+      		y = scale * (M - Math.sqrt(M*M - a*a)) * sin(lat) * sin(lon);
+      		z = scale * (M - Math.sqrt(M*M - a*a)) * cos(lat);
+      		var vec = new p5.Vector(x, y, z);
+      		innerHorizon[i][j] = vec;
+		}
+	}
+
+	for (var i = 0; i < total/2; i++) {
+		var lat = map(i, 0, total/2, 0, Math.PI);
+		fill(innerHorizonColor);
+		if(mesh) {
+			stroke(innerHorizonColor);
+		}
+		else noStroke();
+		beginShape(TRIANGLE_STRIP);
+		for (var j = 0; j < total/2+1; j++) {
+			var v1 = innerHorizon[i][j];
+			vertex(v1.x, v1.y, v1.z);
+			var v2 = innerHorizon[i+1][j];
+			vertex(v2.x, v2.y, v2.z);
+		}
+		endShape();
+	}
+}
+
+function drawOuterErgo(scale) {
+	for (var i = 0; i < total+1; i++) {
+		var lat = map(i, 0, total, 0, Math.PI);
+		for (var j = 0; j < total+1; j++) {
+			var lon = map(j, 0, total, 0, Math.PI*2);
+			x = scale * (M + Math.sqrt(M*M - a*a * Math.cos(lat)*Math.cos(lat))) * sin(lat) * cos(lon);
+      		y = scale * (M + Math.sqrt(M*M - a*a * Math.cos(lat)*Math.cos(lat))) * sin(lat) * sin(lon);
+      		z = scale * (M + Math.sqrt(M*M - a*a * Math.cos(lat)*Math.cos(lat))) * cos(lat);
+      		var vec = new p5.Vector(x, y, z);
+      		outerErgo[i][j] = vec;
+		}
+	}
+
+	for (var i = 0; i < total; i++) {
+		var lat = map(i, 0, total, 0, Math.PI);
+		fill(outerErgoColor);
+		if(mesh) {
+			stroke(outerErgoColor);
+		}
+		else noStroke();
+		beginShape(TRIANGLE_STRIP);
+		for (var j = 0; j < total+1; j++) {
+			var v1 = outerErgo[i][j];
+			vertex(v1.x, v1.y, v1.z);
+			var v2 = outerErgo[i+1][j];
+			vertex(v2.x, v2.y, v2.z);
+		}
+		endShape();
+	}
+}
+
+function drawInnerErgo(scale) {
+	for (var i = 0; i < total/2+1; i++) {
+		var lat = map(i, 0, total/2, 0, Math.PI);
+		for (var j = 0; j < total/2+1; j++) {
+			var lon = map(j, 0, total/2, 0, Math.PI*2);
+			x = scale * (M - Math.sqrt(M*M - a*a * Math.cos(lat)*Math.cos(lat))) * sin(lat) * cos(lon);
+      		y = scale * (M - Math.sqrt(M*M - a*a * Math.cos(lat)*Math.cos(lat))) * sin(lat) * sin(lon);
+      		z = scale * (M - Math.sqrt(M*M - a*a * Math.cos(lat)*Math.cos(lat))) * cos(lat);
+      		var vec = new p5.Vector(x, y, z);
+      		innerErgo[i][j] = vec;
+		}
+	}
+
+	for (var i = 0; i < total/2; i++) {
+		var lat = map(i, 0, total/2, 0, Math.PI);
+		fill(innerErgoColor);
+		if(mesh) {
+			stroke(innerErgoColor);
+		}
+		else noStroke();
+		beginShape(TRIANGLE_STRIP);
+		for (var j = 0; j < total/2+1; j++) {
+			var v1 = innerErgo[i][j];
+			vertex(v1.x, v1.y, v1.z);
+			var v2 = innerErgo[i+1][j];
+			vertex(v2.x, v2.y, v2.z);
+		}
+		endShape();
+	}
+}
+
+function drawRingSingularity(scale) {
+	for (var i = 0; i < total+1; i++) {
+		var lat = map(i, 0, total, 0, Math.PI);
+		for (var j = 0; j < total+1; j++) {
+			var lon = map(j, 0, total, 0, Math.PI*2);
+			var rSurf = 0;
+      		lat = Math.PI/2;
+			x = scale * Math.sqrt(rSurf*rSurf + a*a) * sin(lat) * cos(lon);
+      		y = scale * Math.sqrt(rSurf*rSurf + a*a) * sin(lat) * sin(lon);
+      		z = scale * rSurf * cos(lat);
+      		var vec = new p5.Vector(x, y, z);
+      		ringSingularity[i][j] = vec;
+		}
+	}
+
+	for (var i = 0; i < total; i++) {
+		var lat = map(i, 0, total, 0, Math.PI);
+		fill(ringSingularityColor);
+		if(mesh) {
+			stroke(ringSingularityColor);
+			strokeWeight(2);
+		}
+		else noStroke();
+		beginShape(TRIANGLE_STRIP);
+		for (var j = 0; j < total+1; j++) {
+			var v1 = ringSingularity[i][j];
+			vertex(v1.x, v1.y, v1.z);
+			var v2 = ringSingularity[i+1][j];
+			vertex(v2.x, v2.y, v2.z);
+		}
+		endShape();
+	}
+}
+
+
+function drawTable() {
+
+	document.getElementById("rotation").innerHTML = a;
+	document.getElementById("res").innerHTML = scale;
+}
+
+function animRotate() {
+	if(anim) anim = false;
+	else anim = true;
+}
+
+function changeDarkMode() {
+	if (darkMode) darkMode = false;
+	else darkMode = true;
+}
+
+function meshOn() {
+	if (mesh) mesh = false;
+	else mesh = true;
+}
+
+function windowResized() {
+	resizeCanvas(window.innerWidth, window.innerHeight);
+}
+
+function fullScreen() {
+	let fs = fullscreen();
+    fullscreen(!fs);
+}
+
+function takeScreenshot() {
+	noLoop();
+	save();
+	loop();
+}
+
+</script>
+
+  </head>
+
+  <body>
+
+  	<h1>Kerr Black Hole
+  		<br/><span class="subTitle">in Boyer-Lindquist coordinates</span>
+  	</h1>
+  	
+  	<div class="bottomLeft">
+  		<p>Natural Constants:<br/>\(M = G = c = 1\)</p>
+  		<p>Horizons:<br/>\( r_H^\pm = M \pm \sqrt{M^2 - a^2} \)</p>
+  		<p>Ergosphere:<br/>\( r_E^\pm = M \pm \sqrt{M^2 - a^2 \cos{\theta}^2} \)</p>
+  	</div>
+
+<table class="topLeft">
+	<tr>
+		<th>
+			Options
+		</th>
+	</tr>
+	<tr>
+		<td>
+			<input type="checkbox" id="oErgo" checked> Outer Ergosphere
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<input type="checkbox" id="oHor" checked> Outer Horizon
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<input type="checkbox" id="iHor" checked> Inner Horizon
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<input type="checkbox" id="iErgo" checked> Inner Ergosphere
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<input type="checkbox" id="ringSingularity" checked> Ring Singularity
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<br/>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			Kerr-Parameter: a = <span id="rotation"></span>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<input type="range" min="0" max="1.5" value=".9" step="0.001" class="slider" id="rotationSlider">
+		</td>
+	</tr>
+	<tr>
+		<td>
+			Scale: <span id="res"></span>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<input type="range" min="10" max="400" value="150" class="slider" id="resSlider">
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<button onclick="animRotate()">Rotate</button>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<button onclick="changeDarkMode()">Dark/Light Mode</button>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<button onclick="meshOn()">Mesh On/Off</button>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<button onclick="fullScreen()">Fullscreen</button>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<button onclick="takeScreenshot()">Screenshot</button>
+		</td>
+	</tr>
+</table>
+	
+	<span class="bottomRight">&copy; Alexander Nieddu</span>
+  </body>
+
+</html>

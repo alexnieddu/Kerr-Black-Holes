@@ -1,0 +1,762 @@
+<!-- 
+Kerr Geodesic Simulator
+Cartesian coordinates
+Alexander Nieddu
+
+TODO:
+- Export geodesic with save() as Table/CSV
+- Custom inital conditions and automatic evaluation of constants of motion
+- Custome integration step size
+ -->
+<html>
+	<head>
+		<style>
+  		html, body { width:100%; height:100%; margin:0px; color:black; }
+  		h1, table, .topLeft, .bottomLeft, .topRight, .bottomRight { position: absolute;}
+  		h1 {text-align:center; width:100%;}
+  		.subTitle { font-size: .5em;}
+  		.topLeft {top:20px; left:10px;}
+  		.bottomLeft {bottom:20px; left:10px;}
+  		.topRight {top:20px; right:10px;}
+  		.bottomRight {bottom:20px; right:10px;}
+  		</style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.8.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.8.0/addons/p5.dom.js"></script>
+    <script type="text/javascript" charset="UTF-8" src="https://cdnjs.cloudflare.com/ajax/libs/jsxgraph/0.99.7/jsxgraphcore.js"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});</script>
+	<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+<script>
+
+let width = window.innerWidth, height = window.innerHeight;
+
+var a = .95;
+let M = 1;
+
+var r = 7.0;
+var theta = Math.PI/2;
+var phi = 0;
+var tau = 0;
+var p_r = 0;
+var p_theta = 1.9558;
+
+let r0;
+let theta0;
+let phi0;
+let tau0;
+let p_r0;
+let p_theta0;
+
+let mu = -1;
+let E = 0.935179;
+let L = 2.37176;
+let Q = 3.82514;
+
+var t = 0;
+let dt = 1.0;
+
+let points = new Array();
+var start = true;
+var animZ = 0;
+var animX = 0;
+var darkMode = false;
+var mesh = false;
+let scale = 50;
+let total = 14;
+let outerErgoColor, innerErgoColor, outerHorizonColor, innerHorizonColor, ringSingularityColor;
+
+var outerHorizon = new Array(total);
+
+// Loop to create 2D array using 1D array 
+for (var i = 0; i < total+1; i++) { 
+    outerHorizon[i] = new Array(total); 
+}
+
+var outerErgo = new Array(total);
+
+// Loop to create 2D array using 1D array 
+for (var i = 0; i < total+1; i++) { 
+    outerErgo[i] = new Array(total); 
+}
+
+var innerHorizon = new Array(total);
+
+// Loop to create 2D array using 1D array 
+for (var i = 0; i < total+1; i++) { 
+    innerHorizon[i] = new Array(total); 
+}
+
+
+var innerErgo = new Array(total);
+
+// Loop to create 2D array using 1D array 
+for (var i = 0; i < total+1; i++) { 
+    innerErgo[i] = new Array(total); 
+}
+
+
+var ringSingularity = new Array(total);
+
+// Loop to create 2D array using 1D array 
+for (var i = 0; i < total+1; i++) { 
+    ringSingularity[i] = new Array(total); 
+}
+
+function setup() {
+
+	createCanvas(width, height, WEBGL);
+	colorMode(HSB);
+
+	outerErgoColor = color('hsba(116, 100%, 50%, 0.1)');
+	innerErgoColor = color('hsba(149, 100%, 50%, 0.3)');
+	outerHorizonColor = color('hsba(188, 100%, 50%, 0.2)');
+	innerHorizonColor = color('hsba(206, 100%, 50%, 0.2)');
+	ringSingularityColor = color('hsba(255, 100%, 50%, 1)');
+	geodesicColor = color('hsba(0, 100%, 100%, 1)');
+
+	r0 = r;
+	theta0 = theta;
+	phi0 = phi;
+	tau0 = tau;
+	p_r0 = p_r;
+	p_theta0 = p_theta;
+
+	document.getElementById("r0").value = r0;
+	document.getElementById("theta0").value = theta0;
+	document.getElementById("phi0").value = phi0;
+	document.getElementById("tau0").value = tau0;
+	document.getElementById("p_r0").value = p_r0;
+	document.getElementById("p_theta0").value = p_theta0;
+
+	document.getElementById("mu").value = mu;
+	document.getElementById("E").value = E;
+	document.getElementById("L").value = L;
+	document.getElementById("Q").value = Q;
+
+	//debugMode();
+
+}
+
+
+
+function draw() {
+
+// Sigma = r*r + a*a * Math.cos(theta)*Math.cos(theta);
+// 	Delta = r*r - 2*M*r + a*a;
+// 	k = Q + L*L + a*a*(E*E + mu);
+// 	
+// 	k1_dr		= Delta / Sigma * p_r;
+// 	k1_dtheta	= p_theta / Sigma;
+// 	k1_dphi		= (2*a*r*E + (Sigma - 2*r) * L / (Math.sin(theta)*Math.sin(theta)) ) / (Sigma * Delta);
+// 	k1_dtau		= E + (2*r*(r*r + a*a)*E - 2*a*r*L) / (Sigma * Delta);
+// 	k1_dp_r		= 1/(Sigma * Delta) * (((r*r + a*a)*mu - k)*(r-1) + r * Delta * mu + 2*r*(r*r + a*a)*E*E - 2*a*E*L) - (2*p_r*p_r*(r-1)) / (Sigma);
+// 	k1_dp_theta	= (Math.sin(theta) * Math.cos(theta)) / (Sigma) * ((L*L)/(Math.sin(theta)*Math.sin(theta)) - a*a*(E*E + mu));
+// 
+// 	Sigma = (r + dt*k1_dr)*(r + dt*k1_dr) + a*a * Math.cos(theta + dt*k1_dtheta)*Math.cos(theta + dt*k1_dtheta);
+// 	Delta = (r + dt*k1_dr)*(r + dt*k1_dr) - 2*M*(r + dt*k1_dr) + a*a;
+// 	k = Q + L*L + a*a*(E*E + mu);
+// 	
+// 	k2_dr		= Delta / Sigma * (p_r + dt*k1_dp_r);
+// 	k2_dtheta	= (p_theta + dt*k1_dp_theta) / Sigma;
+// 	k2_dphi		= (2*a*(r + dt*k1_dr)*E + (Sigma - 2*(r + dt*k1_dr)) * L / (Math.sin(theta + dt*k1_dtheta)*Math.sin(theta + dt*k1_dtheta)) ) / (Sigma * Delta);
+// 	k2_dtau		= E + (2*(r + dt*k1_dr)*((r + dt*k1_dr)*(r + dt*k1_dr) + a*a)*E - 2*a*(r + dt*k1_dr)*L) / (Sigma * Delta);
+// 	k2_dp_r		= 1/(Sigma * Delta) * ((((r + dt*k1_dr)*(r + dt*k1_dr) + a*a)*mu - k)*((r + dt*k1_dr)-1) + (r + dt*k1_dr) * Delta * mu + 2*(r + dt*k1_dr)*((r + dt*k1_dr)*(r + dt*k1_dr) + a*a)*E*E - 2*a*E*L) - (2*(p_r + dt*k1_dp_r)*(p_r + dt*k1_dp_r)*((r + dt*k1_dr)-1)) / (Sigma);
+// 	k2_dp_theta	= (Math.sin(theta + dt*k1_dtheta) * Math.cos(theta + dt*k1_dtheta)) / (Sigma) * ((L*L)/(Math.sin(theta + dt*k1_dtheta)*Math.sin(theta + dt*k1_dtheta)) - a*a*(E*E + mu));
+
+// 	width = window.innerWidth;
+// 	height = window.innerHeight;
+// 	resized();
+	
+	if(darkMode) {
+		background(0);
+		document.getElementsByTagName("body")[0].style.color = "white";
+	}
+	else {
+		background(255);
+		document.getElementsByTagName("body")[0].style.color = "black";
+	}
+	a = parseFloat(document.getElementById("rotationSlider").value);
+	dt = parseFloat(document.getElementById("stepSize").value);
+// 	scale = document.getElementById("resSlider").value;
+	// rotateX(Math.PI/2);
+	if(animZ) rotateZ( millis() / 10000 );
+	if(animX) rotateX( millis() / 10000 );
+
+	if(start) calculateGeodesic();
+  	drawSurfaces();
+	drawTable();
+
+	points.push(new p5.Vector(scale * cartesian(r, theta, phi)[0], scale * cartesian(r, theta, phi)[1], scale * cartesian(r, theta, phi)[2]));
+
+	orbitControl();
+	//scale(15);
+
+	noFill();
+	beginShape();
+	for (let v of points) {
+		stroke(geodesicColor);
+		strokeWeight(2);
+		vertex(v.x, v.y, v.z);
+	}
+	endShape();
+}
+
+function calculateGeodesic() {
+
+	Sigma = r*r + a*a * Math.cos(theta)*Math.cos(theta);
+	Delta = r*r - 2*M*r + a*a;
+	k = Q + L*L + a*a*(E*E + mu);
+
+	k1_dr		= Delta / Sigma * p_r;
+	k1_dtheta	= p_theta / Sigma;
+	k1_dphi		= (2*a*r*E + (Sigma - 2*r) * L / (Math.sin(theta)*Math.sin(theta)) ) / (Sigma * Delta);
+	k1_dtau		= E + (2*r*(r*r + a*a)*E - 2*a*r*L) / (Sigma * Delta);
+	k1_dp_r		= 1/(Sigma * Delta) * (((r*r + a*a)*mu - k)*(r-1) + r * Delta * mu + 2*r*(r*r + a*a)*E*E - 2*a*E*L) - (2*p_r*p_r*(r-1)) / (Sigma);
+	k1_dp_theta	= (Math.sin(theta) * Math.cos(theta)) / (Sigma) * ((L*L)/(Math.sin(theta)*Math.sin(theta)) - a*a*(E*E + mu));
+
+
+	Sigma = (r + dt/2*k1_dr)*(r + dt/2*k1_dr) + a*a * Math.cos(theta + dt/2*k1_dtheta)*Math.cos(theta + dt/2*k1_dtheta);
+	Delta = (r + dt/2*k1_dr)*(r + dt/2*k1_dr) - 2*M*(r + dt/2*k1_dr) + a*a;
+	k = Q + L*L + a*a*(E*E + mu);
+
+	k2_dr		= Delta / Sigma * (p_r + dt/2*k1_dp_r);
+	k2_dtheta	= (p_theta + dt/2*k1_dp_theta) / Sigma;
+	k2_dphi		= (2*a*(r + dt/2*k1_dr)*E + (Sigma - 2*(r + dt/2*k1_dr)) * L / (Math.sin(theta + dt/2*k1_dtheta)*Math.sin(theta + dt/2*k1_dtheta)) ) / (Sigma * Delta);
+	k2_dtau		= E + (2*(r + dt/2*k1_dr)*((r + dt/2*k1_dr)*(r + dt/2*k1_dr) + a*a)*E - 2*a*(r + dt/2*k1_dr)*L) / (Sigma * Delta);
+	k2_dp_r		= 1/(Sigma * Delta) * ((((r + dt/2*k1_dr)*(r + dt/2*k1_dr) + a*a)*mu - k)*((r + dt/2*k1_dr)-1) + (r + dt/2*k1_dr) * Delta * mu + 2*(r + dt/2*k1_dr)*((r + dt/2*k1_dr)*(r + dt/2*k1_dr) + a*a)*E*E - 2*a*E*L) - (2*(p_r + dt/2*k1_dp_r)*(p_r + dt/2*k1_dp_r)*((r + dt/2*k1_dr)-1)) / (Sigma);
+	k2_dp_theta	= (Math.sin(theta + dt/2*k1_dtheta) * Math.cos(theta + dt/2*k1_dtheta)) / (Sigma) * ((L*L)/(Math.sin(theta + dt/2*k1_dtheta)*Math.sin(theta + dt/2*k1_dtheta)) - a*a*(E*E + mu));
+
+
+	Sigma = (r + dt/2*k2_dr)*(r + dt/2*k2_dr) + a*a * Math.cos(theta + dt/2*k2_dtheta)*Math.cos(theta + dt/2*k2_dtheta);
+	Delta = (r + dt/2*k2_dr)*(r + dt/2*k2_dr) - 2*M*(r + dt/2*k2_dr) + a*a;
+	k = Q + L*L + a*a*(E*E + mu);
+
+	k3_dr		= Delta / Sigma * (p_r + dt/2*k2_dp_r);
+	k3_dtheta	= (p_theta + dt/2*k2_dp_theta) / Sigma;
+	k3_dphi		= (2*a*(r + dt/2*k2_dr)*E + (Sigma - 2*(r + dt/2*k2_dr)) * L / (Math.sin(theta + dt/2*k2_dtheta)*Math.sin(theta + dt/2*k2_dtheta)) ) / (Sigma * Delta);
+	k3_dtau		= E + (2*(r + dt/2*k2_dr)*((r + dt/2*k2_dr)*(r + dt/2*k2_dr) + a*a)*E - 2*a*(r + dt/2*k2_dr)*L) / (Sigma * Delta);
+	k3_dp_r		= 1/(Sigma * Delta) * ((((r + dt/2*k2_dr)*(r + dt/2*k2_dr) + a*a)*mu - k)*((r + dt/2*k2_dr)-1) + (r + dt/2*k2_dr) * Delta * mu + 2*(r + dt/2*k2_dr)*((r + dt/2*k2_dr)*(r + dt/2*k2_dr) + a*a)*E*E - 2*a*E*L) - (2*(p_r + dt/2*k2_dp_r)*(p_r + dt/2*k2_dp_r)*((r + dt/2*k2_dr)-1)) / (Sigma);
+	k3_dp_theta	= (Math.sin(theta + dt/2*k2_dtheta) * Math.cos(theta + dt/2*k2_dtheta)) / (Sigma) * ((L*L)/(Math.sin(theta + dt/2*k2_dtheta)*Math.sin(theta + dt/2*k2_dtheta)) - a*a*(E*E + mu));
+	
+
+	Sigma = (r + dt*k3_dr)*(r + dt*k3_dr) + a*a * Math.cos(theta + dt*k3_dtheta)*Math.cos(theta + dt*k3_dtheta);
+	Delta = (r + dt*k3_dr)*(r + dt*k3_dr) - 2*M*(r + dt*k3_dr) + a*a;
+	k = Q + L*L + a*a*(E*E + mu);
+
+	k4_dr		= Delta / Sigma * (p_r + dt*k3_dp_r);
+	k4_dtheta	= (p_theta + dt*k3_dp_theta) / Sigma;
+	k4_dphi		= (2*a*(r + dt*k3_dr)*E + (Sigma - 2*(r + dt*k3_dr)) * L / (Math.sin(theta + dt*k3_dtheta)*Math.sin(theta + dt*k3_dtheta)) ) / (Sigma * Delta);
+	k4_dtau		= E + (2*(r + dt*k3_dr)*((r + dt*k3_dr)*(r + dt*k3_dr) + a*a)*E - 2*a*(r + dt*k3_dr)*L) / (Sigma * Delta);
+	k4_dp_r		= 1/(Sigma * Delta) * ((((r + dt*k3_dr)*(r + dt*k3_dr) + a*a)*mu - k)*((r + dt*k3_dr)-1) + (r + dt*k3_dr) * Delta * mu + 2*(r + dt*k3_dr)*((r + dt*k3_dr)*(r + dt*k3_dr) + a*a)*E*E - 2*a*E*L) - (2*(p_r + dt*k3_dp_r)*(p_r + dt*k3_dp_r)*((r + dt*k3_dr)-1)) / (Sigma);
+	k4_dp_theta	= (Math.sin(theta + dt*k3_dtheta) * Math.cos(theta + dt*k3_dtheta)) / (Sigma) * ((L*L)/(Math.sin(theta + dt*k3_dtheta)*Math.sin(theta + dt*k3_dtheta)) - a*a*(E*E + mu));
+
+
+	r = r + (k1_dr + 2*k2_dr + 2*k3_dr + k4_dr)*dt/6;
+	theta = theta + (k1_dtheta + 2*k2_dtheta + 2*k3_dtheta + k4_dtheta)*dt/6;
+	phi = phi + (k1_dphi + 2*k2_dphi + 2*k3_dphi + k4_dphi)*dt/6;
+	tau = tau + (k1_dtau + 2*k2_dtau + 2*k3_dtau + k4_dtau)*dt/6;
+	p_r = p_r + (k1_dp_r + 2*k2_dp_r + 2*k3_dp_r + k4_dp_r)*dt/6;
+	p_theta = p_theta + (k1_dp_theta + 2*k2_dp_theta + 2*k3_dp_theta + k4_dp_theta)*dt/6;
+}
+
+
+
+function kerr(r, theta, phi, tau, p_r, p_theta, mu, E, L, Q) {
+	Sigma = r*r + a*a * Math.cos(theta)*Math.cos(theta);
+	Delta = r*r - 2*M*r + a*a;
+	k = Q + L*L + a*a*(E*E + mu);
+
+	dr			= Delta / Sigma * p_r;
+	dtheta		= p_theta / Sigma;
+	dphi		= (2*a*r*E + (Sigma - 2*r) * L / (Math.sin(theta)*Math.sin(theta)) ) / (Sigma * Delta);
+	dtau			= E + (2*r*(r*r + a*a)*E - 2*a*r*L) / (Sigma * Delta);
+	dp_r		= 1/(Sigma * Delta) * (((r*r + a*a)*mu - k)*(r-1) + r * Delta * mu + 2*r*(r*r + a*a)*E*E - 2*a*E*L) - (2*p_r*p_r*(r-1)) / (Sigma);
+	dp_theta	= (Math.sin(theta) * Math.cos(theta)) / (Sigma) * ((L*L)/(Math.sin(theta)*Math.sin(theta)) - a*a*(E*E + mu));
+
+	return [dr, dtheta, dphi, dtau, dp_r, dp_theta, mu, E, L, Q];
+}
+
+
+
+function cartesian(r, theta, phi) {
+	x = (Math.sqrt(r*r + a*a)) * Math.sin(theta) * Math.cos(phi);
+	y = (Math.sqrt(r*r + a*a)) * Math.sin(theta) * Math.sin(phi);
+	z = r * Math.cos(theta);
+
+	return [x, y, z];
+}
+
+function drawSurfaces() {
+	var checkedOErgo = document.getElementById("oErgo").checked;
+	var checkedOHor = document.getElementById("oHor").checked;
+	var checkedIHor = document.getElementById("iHor").checked;
+	var checkedIErgo = document.getElementById("iErgo").checked;
+	var checkedRingSingularity = document.getElementById("ringSingularity").checked;
+
+	if( checkedOErgo ) {
+		drawOuterErgo(scale);
+	}
+	if( checkedOHor ) {
+		drawOuterHorizons(scale);
+	}
+	if( checkedIHor ) {
+		drawInnerHorizons(scale);
+	}
+	if( checkedIErgo ) {
+		drawInnerErgo(scale);
+	}
+	if( checkedRingSingularity ) {
+		drawRingSingularity(scale);
+	}
+}
+
+function drawOuterHorizons(scale) {
+	for (var i = 0; i < total+1; i++) {
+		var lat = map(i, 0, total, 0, Math.PI);
+		for (var j = 0; j < total+1; j++) {
+			var lon = map(j, 0, total, 0, Math.PI*2);
+			var rSurf = M + Math.sqrt(M*M - a*a);
+			x = scale * Math.sqrt(rSurf*rSurf + a*a) * sin(lat) * cos(lon);
+      		y = scale * Math.sqrt(rSurf*rSurf + a*a) * sin(lat) * sin(lon);
+      		z = scale * rSurf * cos(lat);
+      		var vec = new p5.Vector(x, y, z);
+      		outerHorizon[i][j] = vec;
+		}
+	}
+
+	for (var i = 0; i < total; i++) {
+		var lat = map(i, 0, total, 0, Math.PI);
+		fill(outerHorizonColor);
+		if(mesh) {
+			stroke(outerHorizonColor);
+		}
+		else noStroke();
+		beginShape(TRIANGLE_STRIP);
+		for (var j = 0; j < total+1; j++) {
+			var v1 = outerHorizon[i][j];
+			vertex(v1.x, v1.y, v1.z);
+			var v2 = outerHorizon[i+1][j];
+			vertex(v2.x, v2.y, v2.z);
+		}
+		endShape();
+	}
+}
+
+function drawInnerHorizons(scale) {
+	for (var i = 0; i < total+1; i++) {
+		var lat = map(i, 0, total, 0, Math.PI);
+		for (var j = 0; j < total+1; j++) {
+			var lon = map(j, 0, total, 0, Math.PI*2);
+			var rSurf = M - Math.sqrt(M*M - a*a);
+			x = scale * Math.sqrt(rSurf*rSurf + a*a) * sin(lat) * cos(lon);
+      		y = scale * Math.sqrt(rSurf*rSurf + a*a) * sin(lat) * sin(lon);
+      		z = scale * rSurf * cos(lat);
+      		var vec = new p5.Vector(x, y, z);
+      		innerHorizon[i][j] = vec;
+		}
+	}
+
+	for (var i = 0; i < total; i++) {
+		var lat = map(i, 0, total, 0, Math.PI);
+		fill(innerHorizonColor);
+		if(mesh) {
+			stroke(innerHorizonColor);
+		}
+		else noStroke();
+		beginShape(TRIANGLE_STRIP);
+		for (var j = 0; j < total+1; j++) {
+			var v1 = innerHorizon[i][j];
+			vertex(v1.x, v1.y, v1.z);
+			var v2 = innerHorizon[i+1][j];
+			vertex(v2.x, v2.y, v2.z);
+		}
+		endShape();
+	}
+}
+
+function drawOuterErgo(scale) {
+	for (var i = 0; i < total+1; i++) {
+		var lat = map(i, 0, total, 0, Math.PI);
+		for (var j = 0; j < total+1; j++) {
+			var lon = map(j, 0, total, 0, Math.PI*2);
+			var rSurf = M + Math.sqrt(M*M - a*a * Math.cos(lat)*Math.cos(lat));
+			x = scale * Math.sqrt(rSurf*rSurf + a*a) * sin(lat) * cos(lon);
+      		y = scale * Math.sqrt(rSurf*rSurf + a*a) * sin(lat) * sin(lon);
+      		z = scale * rSurf * cos(lat);
+      		var vec = new p5.Vector(x, y, z);
+      		outerErgo[i][j] = vec;
+		}
+	}
+
+	for (var i = 0; i < total; i++) {
+		var lat = map(i, 0, total, 0, Math.PI);
+		fill(outerErgoColor);
+		if(mesh) {
+			stroke(outerErgoColor);
+		}
+		else noStroke();
+		beginShape(TRIANGLE_STRIP);
+		for (var j = 0; j < total+1; j++) {
+			var v1 = outerErgo[i][j];
+			vertex(v1.x, v1.y, v1.z);
+			var v2 = outerErgo[i+1][j];
+			vertex(v2.x, v2.y, v2.z);
+		}
+		endShape();
+	}
+}
+
+function drawInnerErgo(scale) {
+	for (var i = 0; i < total+1; i++) {
+		var lat = map(i, 0, total, 0, Math.PI);
+		for (var j = 0; j < total+1; j++) {
+			var lon = map(j, 0, total, 0, Math.PI*2);
+			var rSurf = M - Math.sqrt(M*M - a*a * Math.cos(lat)*Math.cos(lat));
+			/*x = scale * (M - Math.sqrt(M*M - a*a * Math.cos(lat)*Math.cos(lat))) * sin(lat) * cos(lon);
+      		y = scale * (M - Math.sqrt(M*M - a*a * Math.cos(lat)*Math.cos(lat))) * sin(lat) * sin(lon);
+      		z = scale * (M - Math.sqrt(M*M - a*a * Math.cos(lat)*Math.cos(lat))) * cos(lat);*/
+
+			x = scale * Math.sqrt(rSurf*rSurf + a*a) * sin(lat) * cos(lon);
+      		y = scale * Math.sqrt(rSurf*rSurf + a*a) * sin(lat) * sin(lon);
+      		z = scale * rSurf * cos(lat);
+      		var vec = new p5.Vector(x, y, z);
+      		innerErgo[i][j] = vec;
+		}
+	}
+
+	for (var i = 0; i < total; i++) {
+		var lat = map(i, 0, total, 0, Math.PI);
+		fill(innerErgoColor);
+		if(mesh) {
+			stroke(innerErgoColor);
+		}
+		else noStroke();
+		beginShape(TRIANGLE_STRIP);
+		for (var j = 0; j < total+1; j++) {
+			var v1 = innerErgo[i][j];
+			vertex(v1.x, v1.y, v1.z);
+			var v2 = innerErgo[i+1][j];
+			vertex(v2.x, v2.y, v2.z);
+		}
+		endShape();
+	}
+}
+
+function drawRingSingularity(scale) {
+	for (var i = 0; i < total+1; i++) {
+		var lat = map(i, 0, total, 0, Math.PI);
+		for (var j = 0; j < total+1; j++) {
+			var lon = map(j, 0, total, 0, Math.PI*2);
+			var rSurf = 0;
+			/*x = scale * (M - Math.sqrt(M*M - a*a * Math.cos(lat)*Math.cos(lat))) * sin(lat) * cos(lon);
+      		y = scale * (M - Math.sqrt(M*M - a*a * Math.cos(lat)*Math.cos(lat))) * sin(lat) * sin(lon);
+      		z = scale * (M - Math.sqrt(M*M - a*a * Math.cos(lat)*Math.cos(lat))) * cos(lat);*/
+
+      		lat = Math.PI/2;
+			x = scale * Math.sqrt(rSurf*rSurf + a*a) * sin(lat) * cos(lon);
+      		y = scale * Math.sqrt(rSurf*rSurf + a*a) * sin(lat) * sin(lon);
+      		z = scale * rSurf * cos(lat);
+      		var vec = new p5.Vector(x, y, z);
+      		ringSingularity[i][j] = vec;
+		}
+	}
+
+	for (var i = 0; i < total; i++) {
+		var lat = map(i, 0, total, 0, Math.PI);
+		fill(ringSingularityColor);
+		if(mesh) {
+			stroke(ringSingularityColor);
+			strokeWeight(2);
+		}
+		else noStroke();
+		beginShape(TRIANGLE_STRIP);
+		for (var j = 0; j < total+1; j++) {
+			var v1 = ringSingularity[i][j];
+			vertex(v1.x, v1.y, v1.z);
+			var v2 = ringSingularity[i+1][j];
+			vertex(v2.x, v2.y, v2.z);
+		}
+		endShape();
+	}
+}
+
+
+function drawTable() {
+
+	// Constants
+	/*document.getElementById("mu").value = mu;
+	document.getElementById("E").value = E;
+	document.getElementById("L").value = L;
+	document.getElementById("Q").value = Q;*/
+
+
+	// Coordinate
+	document.getElementById("radii").innerHTML = r;
+	document.getElementById("theta").innerHTML = theta;
+	document.getElementById("phi").innerHTML = phi;
+	document.getElementById("tau").innerHTML = tau;
+	document.getElementById("p_r").innerHTML = p_r;
+	document.getElementById("p_theta").innerHTML = p_theta;
+
+
+	// Init
+	/*document.getElementById("r0").value = r0;
+	document.getElementById("theta0").value = theta0;
+	document.getElementById("phi0").value = phi0;
+	document.getElementById("tau0").value = tau0;
+	document.getElementById("p_r0").value = tau0;
+	document.getElementById("p_theta0").value = tau0;*/
+
+	document.getElementById("rotation").innerHTML = a;
+// 	document.getElementById("res").innerHTML = scale;
+}
+
+function animRotateZ() {
+	if(animZ) animZ = false;
+	else animZ = true;
+}
+
+function animRotateX() {
+	if(animX) animX = false;
+	else animX = true;
+}
+
+function changeDarkMode() {
+	if (darkMode) darkMode = false;
+	else darkMode = true;
+}
+
+function meshOn() {
+	if (mesh) mesh = false;
+	else mesh = true;
+}
+
+function startSim() {
+	if (start) start = false;
+	else start = true;
+}
+
+function deleteSim() {
+	points = new Array();
+	r = parseFloat(document.getElementById("r0").value);
+	theta = parseFloat(document.getElementById("theta0").value);
+	phi = parseFloat(document.getElementById("phi0").value);
+	tau = parseFloat(document.getElementById("tau0").value);
+	p_r = parseFloat(document.getElementById("p_r0").value);
+	p_theta = parseFloat(document.getElementById("p_theta0").value);
+
+	mu = parseFloat(document.getElementById("mu").value);
+	E = parseFloat(document.getElementById("E").value);
+	L = parseFloat(document.getElementById("L").value);
+	Q = parseFloat(document.getElementById("Q").value);
+}
+
+function fullScreen() {
+	let fs = fullscreen();
+    fullscreen(!fs);
+}
+
+function windowResized() {
+	resizeCanvas(window.innerWidth, window.innerHeight);
+}
+
+function takeScreenshot() {
+	noLoop();
+	save();
+	loop();
+}
+
+</script>
+</head>
+	<body>
+  	<h1>Kerr Geodesics
+  		<br/><span class="subTitle">in Cartesian coordinates</span>
+  	</h1>  	
+	<table class="bottomLeft">
+		<tr>
+			<td>\( r: \)</td>
+			<td id="radii"></td>
+		</tr>
+		<tr>
+			<td>\( \theta: \)</td>
+			<td id="theta"></td>
+		</tr>
+		<tr>
+			<td>\( \varphi: \)</td>
+			<td id="phi"></td>
+		</tr>
+		<tr>
+			<td>\( \tau: \)</td>
+			<td id="tau"></td>
+		</tr>
+		<tr>
+			<td>\( p_r: \)</td>
+			<td id="p_r"></td>
+		</tr>
+		<tr>
+			<td>\( p_\theta: \)</td>
+			<td id="p_theta"></td>
+		</tr>
+	</table>
+	<table class="topRight">
+		<tr>
+			<th colspan="2">Constants of Motion</th>
+		</tr>
+		<tr>
+			<td>\( \mu: \)</td>
+			<td><input id="mu" type="number" step="0.00001"></td>
+		</tr>
+		<tr>
+			<td>\( E: \)</td>
+			<td><input id="E" type="number" step="0.00001"></td>
+		</tr>
+		<tr>
+			<td>\( L: \)</td>
+			<td><input id="L" type="number" step="0.00001"></td>
+		</tr>
+		<tr>
+			<td>\( Q: \)</td>
+			<td><input id="Q" type="number" step="0.00001"></td>
+		</tr>
+		<tr>
+			<td>
+				<br/>
+			</td>
+		</tr>
+		<tr>
+			<th colspan="2">
+				Initial Conditions
+			</th>
+		</tr>
+		<tr>
+			<td>\( r_0: \)</td>
+			<td><input id="r0" type="number" step="0.00001"></td>
+		</tr>
+		<tr>
+			<td>\( \theta_0: \)</td>
+			<td><input id="theta0" type="number" step="0.00001"></td>
+		</tr>
+		<tr>
+			<td>\( \varphi_0: \)</td>
+			<td><input id="phi0" type="number" step="0.00001"></td>
+		</tr>
+		<tr>
+			<td>\( \tau_0: \)</td>
+			<td><input id="tau0" type="number" step="0.00001"></td>
+		</tr>
+		<tr>
+			<td>\( p_r: \)</td>
+			<td><input id="p_r0" type="number" step="0.00001"></td>
+		</tr>
+		<tr>
+			<td>\( p_\theta: \)</td>
+			<td><input id="p_theta0" type="number" step="0.00001"></td>
+		</tr><!-- 
+		<tr>
+			<td>\( Q = p_\theta^2 + \cos^2 \theta \left( a^2(\mu^2 - E^2) + \frac{L^2}{\sin^2 \theta} \right) \)</td>
+		</tr> -->
+	</table>
+	<table class="topLeft">
+		<tr>
+			<th>
+				Options
+			</th>
+		</tr>
+		<tr>
+			<td>
+				<input type="checkbox" id="oErgo" checked> Outer Ergosphere
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<input type="checkbox" id="oHor" checked> Outer Horizon
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<input type="checkbox" id="iHor" checked> Inner Horizon
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<input type="checkbox" id="iErgo" checked> Inner Ergosphere
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<input type="checkbox" id="ringSingularity" checked> Ring Singularity
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Kerr-Parameter: a = <span id="rotation"></span>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<input type="range" min="0" max="1.0" value=".9" step="0.0002" class="slider" id="rotationSlider">
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Step-size: dt = <input type="number" min="0.00001" max="1.0" value="1.0" step="0.00001" id="stepSize">
+			</td>
+		</tr>
+		<!-- 
+	<tr>
+			<td>
+				Scale: <span id="res"></span>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<input type="range" min="10" max="400" value="150" class="slider" id="resSlider">
+			</td>
+		</tr>
+	 -->
+		<tr>
+			<td>
+				<button onclick="startSim()">Start/Pause</button>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<button onclick="deleteSim()">Delete Geodesic</button>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<button onclick="animRotateZ()">Rotate Z</button>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<button onclick="animRotateX()">Rotate X</button>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<button onclick="changeDarkMode()">Dark/Light Mode</button>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<button onclick="meshOn()">Mesh</button>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<button onclick="fullScreen()">Fullscreen</button>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<button onclick="takeScreenshot()">Screenshot</button>
+			</td>
+		</tr>
+	</table>
+
+
+		<span class="bottomRight">&copy; Alexander Nieddu</span>
+	</body>
+</html>

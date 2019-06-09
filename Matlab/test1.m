@@ -1,8 +1,8 @@
 % Working simulation
 
-a = .84; M = 1;
+a = .95; M = 1;
 
-r0 = 3;
+r0 = 6.5;
 theta0 = pi/2;
 phi0 =  0;
 
@@ -31,12 +31,17 @@ Q = 0;
 % L = -(r0^3 - 3*M*r0^2 + a^2*r0 + a^2*M)/(a*(r0 - M));
 % Q = -r0^3*(r0^3 - 6*M*r0^2 + 9*M^2*r0 + 4*a^2*M)/(a^2*(r0 - M)^2);
 
+mu = -1;
+E = 0.956545;
+L = -0.830327;
+Q = 13.4126;
+
 const = [mu, E, L, Q];
 
 x0 = [ r0 theta0 phi0 0];
 
 % Integration
-[t, res] = ode45(@(t, x) kerrONeill(t, x, const), [0 150], x0);
+[t, res] = ode45(@(t, x) kerrONeill(t, x, const), [0 15000], x0);
 %[t, res] = runge4(@(t, x) kerrONeill(t, x, const), [0 10], x0, 1e-6);
 cart = cartesian(res(:,1:3),a);
 
