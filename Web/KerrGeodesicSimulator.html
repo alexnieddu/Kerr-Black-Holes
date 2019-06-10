@@ -5,8 +5,8 @@ Alexander Nieddu
 
 TODO:
 - Export geodesic with save() as Table/CSV
-- Custom inital conditions and automatic evaluation of constants of motion
-- Custome integration step size
+- automatic evaluation of constants of motion
+- Avoid numerical issues dividing by zero
  -->
 <html>
 	<head>
@@ -30,7 +30,7 @@ TODO:
 
 let width = window.innerWidth, height = window.innerHeight;
 
-var a = .95;
+var a = .9;
 let M = 1;
 
 var r = 7.0;
@@ -56,7 +56,8 @@ var t = 0;
 let dt = 1.0;
 
 let points = new Array();
-var start = true;
+let data = new Array();
+var start = false;
 var animZ = 0;
 var animX = 0;
 var darkMode = false;
@@ -182,7 +183,10 @@ function draw() {
 	if(animZ) rotateZ( millis() / 10000 );
 	if(animX) rotateX( millis() / 10000 );
 
-	if(start) calculateGeodesic();
+	if(start) {
+		data.push([ r, theta, phi, tau, p_r, p_theta] );
+		calculateGeodesic();
+	}
   	drawSurfaces();
 	drawTable();
 
@@ -207,6 +211,9 @@ function calculateGeodesic() {
 	Delta = r*r - 2*M*r + a*a;
 	k = Q + L*L + a*a*(E*E + mu);
 
+	if(Delta < 0.1) Delta = 0.1;
+	if(Sigma < 0.1) Sigma = 0.1;
+
 	k1_dr		= Delta / Sigma * p_r;
 	k1_dtheta	= p_theta / Sigma;
 	k1_dphi		= (2*a*r*E + (Sigma - 2*r) * L / (Math.sin(theta)*Math.sin(theta)) ) / (Sigma * Delta);
@@ -218,6 +225,9 @@ function calculateGeodesic() {
 	Sigma = (r + dt/2*k1_dr)*(r + dt/2*k1_dr) + a*a * Math.cos(theta + dt/2*k1_dtheta)*Math.cos(theta + dt/2*k1_dtheta);
 	Delta = (r + dt/2*k1_dr)*(r + dt/2*k1_dr) - 2*M*(r + dt/2*k1_dr) + a*a;
 	k = Q + L*L + a*a*(E*E + mu);
+
+	if(Delta < 0.1) Delta = 0.1;
+	if(Sigma < 0.1) Sigma = 0.1;
 
 	k2_dr		= Delta / Sigma * (p_r + dt/2*k1_dp_r);
 	k2_dtheta	= (p_theta + dt/2*k1_dp_theta) / Sigma;
@@ -231,6 +241,9 @@ function calculateGeodesic() {
 	Delta = (r + dt/2*k2_dr)*(r + dt/2*k2_dr) - 2*M*(r + dt/2*k2_dr) + a*a;
 	k = Q + L*L + a*a*(E*E + mu);
 
+	if(Delta < 0.1) Delta = 0.1;
+	if(Sigma < 0.1) Sigma = 0.1;
+
 	k3_dr		= Delta / Sigma * (p_r + dt/2*k2_dp_r);
 	k3_dtheta	= (p_theta + dt/2*k2_dp_theta) / Sigma;
 	k3_dphi		= (2*a*(r + dt/2*k2_dr)*E + (Sigma - 2*(r + dt/2*k2_dr)) * L / (Math.sin(theta + dt/2*k2_dtheta)*Math.sin(theta + dt/2*k2_dtheta)) ) / (Sigma * Delta);
@@ -242,6 +255,9 @@ function calculateGeodesic() {
 	Sigma = (r + dt*k3_dr)*(r + dt*k3_dr) + a*a * Math.cos(theta + dt*k3_dtheta)*Math.cos(theta + dt*k3_dtheta);
 	Delta = (r + dt*k3_dr)*(r + dt*k3_dr) - 2*M*(r + dt*k3_dr) + a*a;
 	k = Q + L*L + a*a*(E*E + mu);
+
+	if(Delta < 0.1) Delta = 0.1;
+	if(Sigma < 0.1) Sigma = 0.1;
 
 	k4_dr		= Delta / Sigma * (p_r + dt*k3_dp_r);
 	k4_dtheta	= (p_theta + dt*k3_dp_theta) / Sigma;
@@ -538,6 +554,7 @@ function startSim() {
 
 function deleteSim() {
 	points = new Array();
+	data = new Array();
 	r = parseFloat(document.getElementById("r0").value);
 	theta = parseFloat(document.getElementById("theta0").value);
 	phi = parseFloat(document.getElementById("phi0").value);
@@ -564,6 +581,10 @@ function takeScreenshot() {
 	noLoop();
 	save();
 	loop();
+}
+
+function exportData() {
+	save(data, "data.txt");
 }
 
 </script>
@@ -752,6 +773,11 @@ function takeScreenshot() {
 		<tr>
 			<td>
 				<button onclick="takeScreenshot()">Screenshot</button>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<button onclick="exportData()">Export</button>
 			</td>
 		</tr>
 	</table>
