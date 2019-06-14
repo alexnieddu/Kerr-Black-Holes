@@ -6,110 +6,95 @@
     <script type="text/x-mathjax-config">MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});</script>
 	<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
     
-    <title>Alexander Nieddu - Graduate student in mathematics</title>
+    <title>Kerr Black Hole</title>
 
 </head>
 <body>
 
 	<div class="header">
 		<div class="center">
-			<div class="head_pic">
-				<img src="alexander-nieddu.jpg" alt="Alexander Nieddu">
-			</div>
+			<h1 class="centered">Kerr Black Hole</h1>
 		
-			<h1 class="centered">Alexander Nieddu</h1>
-		
-			<p class="centered">Graduate student in mathematics at OTH Regensburg, Department of Computer Science and Mathematics.</p>
-			<p class="centered">Regensburg, Germany</p>
+			<h3 class="centered">Kerr black hole visualizer and Kerr geodesics simulator in Javascript with WebGL.</h3>
+
+			<p class="centered light_font">by Alexander Nieddu</p>
 		</div>
 	</div>
 
 	<div class="main">
 		<div class="center">
+
+			<h2 class="centered">Intro</h2>
+			<p>This project is about visualising Kerr black holes and simulate geodesics in Kerr spacetimes. It contains tools to investigate the surfaces and geodesics of Kerr black holes.</p>
+			<p>It aroses from my master thesis about geodesics in Kerr spacetime. It was motivated by <a href="https://duetosymmetry.com">Leo C. Stein</a>, who did great work on spherical photon orbits in Kerr geometry. It was implemented with Javascript and WebGL using <a href="https://p5js.org">p5.js</a>.</p>
+			<p>I would like to share these tools primarily with students and lecturers for educational purposes.</p>
+			<p class="centered"><a href="https://alexnieddu.github.io/Kerr-Black-Hole-Geodesics/Web/KerrSurfaces.html">Visualizer(Cartesian)</a> &middot; <a href="https://alexnieddu.github.io/Kerr-Black-Hole-Geodesics/Web/KerrSurfacesBL.html">Visualizer(BL)</a> &middot; <a href="https://alexnieddu.github.io/Kerr-Black-Hole-Geodesics/Web/KerrGeodesicSimulator.html">Geodesic</a></p>
+
+
+
+			<h2 class="centered">Kerr Black Holes</h2>
+			<p>Black holes are regions in spacetime exhibiting gravitational acceleration so strong that nothing is able to escape from it. Black holes are predicted by Einstein's theory of general relativity.</p>
+			<p>They can hold only three independent physical properties by the so called no-hair theorem: mass, angular momentum and charge. Uncharged, rotating black holes are described by the Kerr metric and are often called Kerr black holes. It is common to express the Kerr metric in Boyer-Lindquist coordinates as follows</p>
+
+			<p class="centered">\( ds^{2} = -\left( 1 - \frac{2Mr}{\Sigma} \right) dt^{2} -\frac{4aMr}{\Sigma} \sin^{2}{\theta} \, dt \, d\phi 
+	 		+ \frac{(r^{2} + a^{2})^{2} - a^{2} \, \Delta \, \sin^{2}{\theta}}{\Sigma} \sin^{2} \, {\theta} \, d\phi ^{2} + \frac{\Sigma}{\Delta} dr^{2} + \Sigma \, d\theta^{2}, \)</p>
+
+	 		<p>where \( r, \theta, \varphi \) are standard spherical coordinate system with following abbreviations</p>
+
+	 		<p class="centered">\( \Delta(r) = r^{2} - 2 M r + a^{2} \quad und \quad \Sigma(r, \theta) = r^{2} + a^{2} \cos^{2}{\theta}. \)</p>
+
+	 		<p>Everything is in geometric units \( G = c = 1 \) and \( M = 1 \).</p>
 		
-			<h2 class="centered">Education</h2>
+
+
+			<h2 class="centered">Kerr Black Hole Visualizer</h2>
+
+			<p>This tool allows you to visualize the surfaces of a rotating black hole. The Kerr parameter \( a \) can be changed to investigate different scenarios like Schwarzschild metric (\( a=0 \)) or extreme Kerr solution (\( a=1 \)).</p>
+			<p>The surfaces are calculated with the following formulas.</p>
+			<p>Inner and outer event horizon:</p>
+			<p class="centered">\( r_H^\pm = M \pm \sqrt{M^2 - a^2} \)</p>
+  			<p>Inner and outer ergosphere:</p>
+  			<p class="centered">\( r_E^\pm = M \pm \sqrt{M^2 - a^2 \cos{\theta}^2} \)</p>
+  			<p>According to the tool the surfaces will be visualized in different coordinate systems. Either <a href="https://alexnieddu.github.io/Kerr-Black-Hole-Geodesics/Web/KerrSurfaces.html">cartesian</a> coordinates or <a href="https://alexnieddu.github.io/Kerr-Black-Hole-Geodesics/Web/KerrSurfacesBL.html">Boyer-Lindquist</a> coordinates.</p>
+
+			<img src="./kerrbl.png">
+
+
+
+  			<h2 class="centered">Kerr Geodesic Simulator</h2>
+
+			<p>This <a href="https://alexnieddu.github.io/Kerr-Black-Hole-Geodesics/Web/KerrGeodesicSimulator.html">tool</a> allows you to calculate geodesics in Kerr spacetimes.</p>
+  			<p>Geodesics are the straightest-possible lines as prescribed by the geometry of spacetime. Their motion is described by the geodesic equation</p>
+  			<p class="centered">\( \frac{d^{2} x^{\kappa}}{dt^{2}} + \Gamma^{\kappa}_{\mu \nu} \frac{dx^{\mu}}{dt} \frac{dx^{\nu}}{dt} = 0 \)</p>
+  			<p>where \( \Gamma^{\kappa}_{\mu \nu} \) are the Christoffel symbols of the metric.</p>
+  			<p>According to [1.] the geodesics in Kerr spacetimes can be computed with the following formulas:</p>
+  			<p class="centered">\( \dot r = \frac{\Delta}{\Sigma} p_r \)</p>
+  			<p class="centered">\( \dot \theta = \frac{p_\theta}{\Sigma} \)</p>
+  			<p class="centered">\( \dot \varphi = \frac{2arE + (\Sigma - 2r)L/\sin^2 \theta}{\Sigma \Delta} \)</p>
+  			<p class="centered">\( \dot \tau = E + \frac{2r(r^2 + a^2)E-2arL}{\Sigma \Delta} \)</p>
+  			<p class="centered">\( \dot p_r = \frac{1}{\Sigma \Delta} \left( ((r^2 + a^2)\mu - \kappa)(r-1) + r\Delta \mu + 2r(r^2 + a^2)E^2 - 2aEL \right) - \frac{2p_r^2(r-1)}{\Sigma} \)</p>
+  			<p class="centered">\( \dot p_\theta = \frac{\sin \theta \cos \theta}{\Sigma} \left( \frac{L^2}{\sin^4 \theta} - a^2(E^2 + \mu) \right) \)</p>
+  			<p>\( \mu, E, L, Q \) are the so called constants of motion. The inital conditions are given by \( (r, \theta, \varphi, \tau, p_r, p_\theta) \).</p>
+  			<p>The tool uses 4th order Runge-Kutta method to integrate the system of ODE's. It is possible to adjust the stepsize \( dt \), even during runtime. The integration can be paused at any time.</p>
+  			<p>Delete geodesic to reset the simulation with given inital conditions. You are able to take screenshots and to export the simulation data at any time.</p>
+
+			<img src="./kerrgeo.png">
+
+
+
+			<h2 class="centered">References</h2>
+			<ol>
+				<li>
+					Radiation transfer of emission lines in curved space-time, S. V. Fuerst, K. Wu, A&A 424 (3) 733-746 (2004), DOI: 10.1051/0004-6361:20035814
+				</li>
+				<li>
+					The Mathematical Theory of Black Holes, S. Chandrasekhar, Clarendon Press, Oxford Classic Texts in the Physical Sciences
+				</li>
+			</ol>
+
+
 		
-			<div class="section">
-				<div class="section_a">
-					<h3>OTH Regensburg - Technical University of Applied Sciences</h3>
-					<p>M.S. in mathematics<br>
-					</p>
-					<p class="light_font">(in progress)</p>
-					<br>
-					<p>B.S. in mathematics<br>
-					Major in numerical analysis.</p>
-					<p class="light_font">(former)</p>
-				</div>
-				<div class="section_b">
-					<a href="https://www.oth-regensburg.de/en.html"><img src="oth-regensburg-logo.png" alt="OTH Regensbug Logo"></a>
-				</div>
-			</div>
-		
-		
-		
-			<h2 class="centered">Experience</h2>
-		
-			<div class="section">
-				<div class="section_a">
-					<h3><a href="https://3dreams.com">3Dreams Media Agency</a></h3>
-					<p>Working Student<br/>
-					<em>Web- and App-Developer & Assistant in Online Marketing</em></p>
-					<p class="light_font">(current)</p>
-				</div>
-				<div class="section_b">
-					<a href="https://3dreams.com"><img style="width:35%;" src="3dreams.png" alt="3Dreams Logo"></a>
-				</div>
-			</div>
-			
-			<div class="section">
-				<div class="section_a">
-					<h3><a href="http://kinu-app.com">Kinu App</a></h3>
-					<p>Founder & Developer<br>
-					<em>A web app for individual movie recommendations based on a collaborative filtering system.</em></p>
-					<p class="light_font">October - November 2015</p>
-				</div>
-				<div class="section_b">
-					<a href="http:/kinu-app.com"><img style="width:35%;" src="kinu-icon-app.png" alt="Kinu App Logo"></a>
-				</div>
-			</div>
-		
-			<div class="section">
-				<div class="section_a">
-					<h3><a href="http://www.iwu.fraunhofer.de/en.html">Fraunhofer Institute for Machine Tools and Forming Technology IWU</a></h3>
-					<p>Bachelor Student<br>
-					Thesis: <em class="light_font"><a href="http://publica.fraunhofer.de/dokumente/N-345406.html">SPH-Method for Numerical Hydrodynamics using the CUDA-Framework</a></em></p>
-					<p class="light_font">January - June 2015</p>
-				</div>
-				<div class="section_b">
-					<a href="http://www.iwu.fraunhofer.de/en.html"><img style="width:30%;" src="fraunhofer-gesellschaft.jpg" alt="Fraunhofer Gesellschaft Logo"></a>
-				</div>
-			</div>
-		
-		
-			<div class="section">
-				<div class="section_a">
-					<h3><a href="http://www.mpa-garching.mpg.de">Max Planck Institute for Astrophysics</a></h3>
-					<p>Intern<br>
-					<em>N-Body-Simulations in Star Forming Regions</em></p>
-					<p class="light_font">February - June 2014</p>
-				</div>
-				<div class="section_b">
-					<a href="http://www.mpa-garching.mpg.de"><img src="max-planck-logo.png" alt="Max Planck Gesellschaft Logo"></a>
-				</div>
-			</div>
-		
-			<h2 class="centered">Skills</h2>
-		
-			<div class="section">
-				<h3>Programming</h3>
-				<p>Java &middot; C/C++ &middot; PHP &middot; SQL &middot; Javascript &middot; R &middot; Python &middot; C#</p>
-			
-				<h3>Operating Systems</h3>
-				<p>Windows &middot; Mac OS &middot; Linux</p>
-			</div>
-		
-		
-			<p class="centered light_font"><a href="mailto:nieddu@gmx.net">&middot; Email &middot;</a></p>
+			<p class="centered light_font">&copy; Alexander Nieddu</p>
 		
 		</div>
 	</div>

@@ -2,7 +2,7 @@ html
 {
 	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 	color: #3b372e;
-	font-size: 13px
+	font-size: 13px;
 }
 
 body
@@ -14,12 +14,18 @@ body
 p
 {
 	line-height:18px;
+	text-align: justify;
 }
 
 a
 {
 	text-decoration:none;
 	color:#1da1f2;
+}
+img
+{
+	position: relative;
+	width: 100%;
 }
 
 .header
@@ -97,6 +103,11 @@ h3
 	margin-bottom:0px;
 	padding-bottom:0px;
 	font-size:17px;
+}
+
+li
+{
+	margin:5px 0;
 }
 
 .section
