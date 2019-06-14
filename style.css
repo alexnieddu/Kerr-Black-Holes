@@ -1,0 +1,155 @@
+html
+{
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	color: #3b372e;
+	font-size: 13px
+}
+
+body
+{
+	padding:0px;
+	margin:0px;
+}
+
+p
+{
+	line-height:18px;
+}
+
+a
+{
+	text-decoration:none;
+	color:#1da1f2;
+}
+
+.header
+{
+	position:relative;
+	padding-top:50px;
+	padding-bottom:10px;
+	background:#f5f8fa;
+}
+
+.main
+{
+	position:relative;
+	padding-bottom:200px;
+	padding-top:0px;
+	background:white;
+}
+
+.light_font
+{
+	opacity:.7;
+}
+
+.center
+{
+	position:relative;
+	margin:auto;
+	width:600px;
+}
+
+.centered
+{
+	text-align:center;
+}
+
+.head_pic
+{
+	position:relative;
+	display:block;
+	width:200px;
+	height:200px;
+	margin:auto;
+	overflow:hidden;
+	border-radius:100%;
+	box-shadow:black 0px 0px px;
+	
+}
+
+.head_pic img
+{
+	position:relative;
+	display:block;
+	margin:auto;
+	top:-20px;
+}
+
+h1, h2, h3
+{
+	font-weight:400;
+}
+
+h1
+{
+	font-size:3em;
+}
+
+h2
+{
+	margin-top:50px;
+	font-size:2em;
+}
+
+h3
+{
+	margin-bottom:0px;
+	padding-bottom:0px;
+	font-size:17px;
+}
+
+.section
+{
+	position:relative;
+	width:100%;
+	margin:0px 0 30px 0px;
+}
+
+.section:after
+{
+	content: '';
+    display: block;
+    clear: both;
+}
+
+.section p
+{
+	
+}
+
+.section h3 a
+{
+	color:#3b372e;
+}
+
+.section_a
+{
+	position:relative;
+	width:calc(70% - 10px);
+	margin:0;
+	padding:0 10px 0 0;
+	display:block;
+	float:left;
+}
+
+.section_b
+{
+	position:relative;
+	width:30%;
+	margin:0;
+	margin-left:70%;
+	padding:0;
+	display:block;
+}
+
+.section_b img
+{
+	position:relative;
+	width:50%;
+	padding-top:20px;
+	display:block;
+	margin:auto;
+}
+
+
