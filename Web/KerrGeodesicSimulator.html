@@ -542,8 +542,15 @@ function animRotateX() {
 }
 
 function changeDarkMode() {
-	if (darkMode) darkMode = false;
-	else darkMode = true;
+	btn = document.getElementById("darkToggle");
+	if (darkMode) {
+		darkMode = false;
+		btn.innerHTML = "Dark Mode";
+	}
+	else {
+		darkMode = true;
+		btn.innerHTML = "Light Mode";
+	}
 }
 
 function meshOn() {
@@ -552,8 +559,15 @@ function meshOn() {
 }
 
 function startSim() {
-	if (start) start = false;
-	else start = true;
+	btn = document.getElementById("startToggle");
+	if (start) {
+		start = false;
+		btn.innerHTML = "Start";
+	}
+	else {
+		start = true;
+		btn.innerHTML = "Pause";
+	}
 }
 
 function deleteSim() {
@@ -741,7 +755,7 @@ function exportData() {
 	 -->
 		<tr>
 			<td>
-				<button onclick="startSim()">Start/Pause</button>
+				<button id="startToggle" onclick="startSim()">Start</button>
 			</td>
 		</tr>
 		<tr>
@@ -761,7 +775,7 @@ function exportData() {
 		</tr>
 		<tr>
 			<td>
-				<button onclick="changeDarkMode()">Dark/Light Mode</button>
+				<button id="darkToggle" onclick="changeDarkMode()">Dark Mode</button>
 			</td>
 		</tr>
 		<tr>

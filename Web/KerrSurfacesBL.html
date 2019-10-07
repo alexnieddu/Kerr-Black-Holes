@@ -339,8 +339,15 @@ function animRotate() {
 }
 
 function changeDarkMode() {
-	if (darkMode) darkMode = false;
-	else darkMode = true;
+	btn = document.getElementById("darkToggle");
+	if (darkMode) {
+		darkMode = false;
+		btn.innerHTML = "Dark Mode";
+	}
+	else {
+		darkMode = true;
+		btn.innerHTML = "Light Mode";
+	}
 }
 
 function meshOn() {
@@ -442,12 +449,12 @@ function takeScreenshot() {
 	</tr>
 	<tr>
 		<td>
-			<button onclick="changeDarkMode()">Dark/Light Mode</button>
+			<button id="darkToggle" onclick="changeDarkMode()">Dark Mode</button>
 		</td>
 	</tr>
 	<tr>
 		<td>
-			<button onclick="meshOn()">Mesh On/Off</button>
+			<button onclick="meshOn()">Mesh</button>
 		</td>
 	</tr>
 	<tr>
