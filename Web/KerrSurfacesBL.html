@@ -6,25 +6,21 @@ Alexander Nieddu
 <html>
 
   <head>
+  	<title>Kerr Black Hole - Boyer-Lindquist Coordinates</title>
 
   	<style>
-
   		html, body { width:100%; height:100%; margin:0px; color:black; }
-
   		h1, table, .topLeft, .bottomLeft, .topRight, .bottomRight { position: absolute;}
-
   		h1 {text-align:center; width:100%;}
   		.subTitle { font-size: .5em;}
-
   		.topLeft {top:20px; left:10px;}
-
   		.bottomLeft {bottom:20px; left:10px;}
-
   		.topRight {top:20px; right:10px;}
-  		
   		.bottomRight {bottom:20px; right:10px;}
-
-  	</style>
+  		button { width:150px; background:grey; color:white; border:none; border-radius:4px; font-size:.8em; padding:5px; cursor:pointer; }
+  		button:hover { background:#555555; }
+  		input { background:white; border:none; font-size:.8em; padding:5px; border-bottom: 1px solid #555555; }
+  		</style>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.8.0/p5.js"></script>
 
@@ -57,7 +53,7 @@ var anim = 0;
 var darkMode = false;
 var mesh = true;
 let scale = 150;
-var total = 50;
+var total = 30;
 let outerErgoColor, innerErgoColor, outerHorizonColor, innerHorizonColor, ringSingularityColor;
 
 var outerHorizon = new Array(total);
